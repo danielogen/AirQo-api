@@ -1,6 +1,5 @@
 from flask import Flask
 import logging
-#from api.config import get_logger
 
 _logger = logging.getLogger(__name__)
 
