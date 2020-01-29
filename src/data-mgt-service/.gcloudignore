@@ -13,3 +13,4 @@
 .git
 .gitignore
 airqo-250220-e81fbe8411d4.json
+.env

@@ -3,6 +3,86 @@ import datetime as dt
 from datetime import datetime,timedelta
 import pandas as pd
 
+
+def get_historical_channel_hourly_data(channel_id:int):
+    client = bigquery.Client()
+    'TODO: update the query'
+    sql_query = """
+            SELECT created_at as time,channel_id,s1_pm2_5
+            FROM `airqo-250220.thingspeak.hourly_cleaned_feeds_pms` 
+            WHERE channel_id = {0}
+        """
+    sql_query = sql_query.format(channel_id)
+
+    job_config = bigquery.QueryJobConfig()
+    job_config.use_legacy_sql = False
+     
+    df = client.query(sql_query, job_config=job_config).to_dataframe()
+    df['time'] =  pd.to_datetime(df['time'])
+    time_indexed_data = df.set_index('time')
+    return time_indexed_data    
+
+def get_previous_channel_hourly_data(channel_id:int):
+    client = bigquery.Client()
+    'TODO: update the query'
+    sql_query = """
+            SELECT created_at as time,channel_id,s1_pm2_5
+            FROM `airqo-250220.thingspeak.hourly_cleaned_feeds_pms` 
+            WHERE channel_id = {0}
+        """
+    sql_query = sql_query.format(channel_id)
+
+    job_config = bigquery.QueryJobConfig()
+    job_config.use_legacy_sql = False
+     
+    df = client.query(sql_query, job_config=job_config).to_dataframe()
+    df['time'] =  pd.to_datetime(df['time'])
+    time_indexed_data = df.set_index('time')
+    return time_indexed_data    
+
+
+def save_cleaned_hourly__data(cleaned_hourly_data):
+    client = bigquery.Client()
+    dataset_ref = client.dataset('thingspeak','airqo-250220')
+    table_ref = dataset_ref.table('hourly_cleaned_feeds_pms')
+    table = client.get_table(table_ref)
+
+    rows_to_insert = cleaned_hourly_data
+    errors = client.insert_rows(table, rows_to_insert)
+    if errors == []:
+        return 'Records saved successfully.'
+    else:
+        return errors
+
+def get_raw_channel_data(channel_id:int):
+    channel_id = str(channel_id)
+    client = bigquery.Client()
+    sql_query = """
+            SELECT created_at as time, channel_id,field1 as s1_pm2_5,
+            field2 as s1_pm10, field3 as s2_pm2_5, field4 s2_pm10, 
+            FROM `airqo-250220.thingspeak.raw_feeds_pms` 
+            WHERE channel_id = {0}
+        """
+    xx = "'"+ channel_id + "'"
+    sql_query = sql_query.format(xx)
+
+    job_config = bigquery.QueryJobConfig()
+    job_config.use_legacy_sql = False
+     
+    df = client.query(sql_query, job_config=job_config).to_dataframe()
+    df['time'] =  pd.to_datetime(df['time'])
+    df['time'] = df['time']
+    df['s1_pm2_5'] = pd.to_numeric(df['s1_pm2_5'],errors='coerce')
+    df['channel_id'] = pd.to_numeric(df['channel_id'],errors='coerce')
+    df['s1_pm10'] = pd.to_numeric(df['s1_pm10'],errors='coerce')
+    df['s2_pm2_5'] = pd.to_numeric(df['s2_pm2_5'],errors='coerce')
+    df['s2_pm10'] = pd.to_numeric(df['s2_pm10'],errors='coerce')
+    time_indexed_data = df.set_index('time')
+    final_hourly_data = time_indexed_data.resample('H').mean().round(2) 
+    final_data=final_hourly_data.dropna().reset_index()
+    
+    return final_data
+
 def save_weather_forecasts(weather_forecasts):
     client = bigquery.Client()
     dataset_ref = client.dataset('thingspeak','airqo-250220')

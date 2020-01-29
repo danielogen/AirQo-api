@@ -8,7 +8,7 @@ _logger = logging.getLogger(__name__)
 def create_app(*, config_object) -> Flask:
     """Create a flask app instance."""
 
-    flask_app = Flask('ml_api')
+    flask_app = Flask('data_management_app')
     flask_app.config.from_object(config_object)
 
     # import blueprints
