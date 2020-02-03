@@ -21,6 +21,18 @@ def health():
         _logger.info('health status OK')
         return 'ok'
 
+@data_management_app.route('/hourly_observations', methods=['GET'])
+def get_channel_hourly_observations():
+    if request.method == 'GET':
+        _logger.info('health status OK')
+        xxx = request.args.get("channel_id")
+        channel_id = int(xxx)
+        results = dm.get_historical_channel_hourly_data(channel_id)
+        return jsonify({'hourly_results': results}), 200
+    else:
+        return jsonify({'errors':'channel id invalid',}), 200
+
+
 @data_management_app.route('/api/v1/predict/', methods=['POST'])
 def predict_avgs():
     if request.method == 'POST':

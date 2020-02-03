@@ -6,21 +6,24 @@ import pandas as pd
 
 def get_historical_channel_hourly_data(channel_id:int):
     client = bigquery.Client()
-    'TODO: update the query'
     sql_query = """
-            SELECT created_at as time,channel_id,s1_pm2_5
+            SELECT time,channel_id,s1_pm2_5
             FROM `airqo-250220.thingspeak.hourly_cleaned_feeds_pms` 
-            WHERE channel_id = {0}
+            WHERE channel_id = {0} AND CAST(time as TIMESTAMP) >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 48 HOUR) 
+            ORDER BY time DESC
         """
     sql_query = sql_query.format(channel_id)
 
     job_config = bigquery.QueryJobConfig()
     job_config.use_legacy_sql = False
-     
-    df = client.query(sql_query, job_config=job_config).to_dataframe()
-    df['time'] =  pd.to_datetime(df['time'])
-    time_indexed_data = df.set_index('time')
-    return time_indexed_data    
+    query_job = client.query(sql_query, job_config=job_config)
+    results = query_job.result()
+    historical_data = []
+
+    if results.total_rows >=1:
+        for row in results:
+            historical_data.append({"channel_id":row.channel_id,"pm2_5":row.s1_pm2_5, "time":row.time})
+    return historical_data 
 
 def get_previous_channel_hourly_data(channel_id:int):
     client = bigquery.Client()
