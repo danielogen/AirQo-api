@@ -4,6 +4,9 @@ const request = require('request');
 const Channels = require('../models/Channel');
 const Feed = require('../models/Feed');
 
+const {BigQuery} = require('@google-cloud/bigquery');
+const bqclient = new BigQuery();
+
 async function asyncForEach(array, callback) {
     for (let index = 0; index < array.length; index++) {
         await callback(array[index], index, array);
@@ -39,10 +42,14 @@ const data = {
         res.status(200).send(json);
     },
     storeFeeds: async (req, res) => {
-        const api_url = `https://api.thingspeak.com/channels/${req.params.ch_id}/feeds.json?results=8000`;
+        const api_url = `https://api.thingspeak.com/channels/${req.params.ch_id}/feeds.json`;
         const fetch_response = await fetch(api_url);
         const json = await fetch_response.json();
         res.status(200).send(json);
+    },
+
+    historicFeeds: async () =>{
+
     },
 
     getLastEntry: async (req, res) => {
@@ -62,12 +69,8 @@ const data = {
     },
 
     weatherForecasts: async (req, res) => {
-
         const lat = req.params.lat;
         const lon = req.params.lon;
-
-
-
         try {
 
         }
